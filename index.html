@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BiteSwift - Food Delivery Platform</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Google Fonts - Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  
+  <style>
+    body {
+      font-family: 'Outfit', sans-serif;
+    }
+    /* Hide scrollbar for category filter container */
+    .scrollbar-none::-webkit-scrollbar {
+      display: none;
+    }
+    .scrollbar-none {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+
+  <!-- Tailwind Configuration for Custom Animations -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          animation: {
+            'spin-slow': 'spin 20s linear infinite',
+            'fadeIn': 'fadeIn 0.3s ease-out forwards',
+            'scaleUp': 'scaleUp 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
+          },
+          keyframes: {
+            fadeIn: {
+              '0%': { opacity: '0', transform: 'translateY(10px)' },
+              '100%': { opacity: '1', transform: 'translateY(0)' },
+            },
+            scaleUp: {
+              '0%': { opacity: '0', transform: 'scale(0.95) translateY(12px)' },
+              '100%': { opacity: '1', transform: 'scale(1) translateY(0)' },
+            }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-slate-50 min-h-screen">
+  
+  <!-- Mount root for React -->
+  <div id="root">
+    <!-- Initial Loading Screen -->
+    <div class="flex items-center justify-center min-h-screen">
+      <div class="flex flex-col items-center gap-4">
+        <div class="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-orange-500"></div>
+        <p class="text-slate-500 font-semibold tracking-wide">Cooking your experience...</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- React 18 & ReactDOM CDN -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  
+  <!-- Babel Standalone CDN for dynamic JSX transpilation -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <!-- Loader Script to bundle/execute JSX -->
+  <script type="text/javascript">
+    // Custom CommonJS module shim for browser context
+    window.exports = {};
+    window.module = { exports: window.exports };
+    
+    // Custom require resolver mapping standard imports to window globals
+    window.require = function(moduleName) {
+      if (moduleName === 'react') return window.React;
+      if (moduleName === 'react-dom') return window.ReactDOM;
+      throw new Error(`Cannot find module: '${moduleName}' in CDN shim environment`);
+    };
+
+    // Asynchronously fetch, transpile and run pages
+    async function initApp() {
+      try {
+        // Fetch all components in parallel
+        const [landingRes, registerRes, loginRes, customerRes, restaurantRes] = await Promise.all([
+          fetch('./src/pages/LandingPage.jsx'),
+          fetch('./src/pages/Register.jsx'),
+          fetch('./src/pages/Login.jsx'),
+          fetch('./src/pages/CustomerDashboard.jsx'),
+          fetch('./src/pages/RestaurantDashboard.jsx')
+        ]);
+
+        if (!landingRes.ok) throw new Error(`HTTP error ${landingRes.status} fetching LandingPage.jsx`);
+        if (!registerRes.ok) throw new Error(`HTTP error ${registerRes.status} fetching Register.jsx`);
+        if (!loginRes.ok) throw new Error(`HTTP error ${loginRes.status} fetching Login.jsx`);
+        if (!customerRes.ok) throw new Error(`HTTP error ${customerRes.status} fetching CustomerDashboard.jsx`);
+        if (!restaurantRes.ok) throw new Error(`HTTP error ${restaurantRes.status} fetching RestaurantDashboard.jsx`);
+
+        const [landingJsx, registerJsx, loginJsx, customerJsx, restaurantJsx] = await Promise.all([
+          landingRes.text(),
+          registerRes.text(),
+          loginRes.text(),
+          customerRes.text(),
+          restaurantRes.text()
+        ]);
+        
+        // Transpile all pages
+        const compiledLanding = Babel.transform(landingJsx, { presets: ['react', 'env'] }).code;
+        const compiledRegister = Babel.transform(registerJsx, { presets: ['react', 'env'] }).code;
+        const compiledLogin = Babel.transform(loginJsx, { presets: ['react', 'env'] }).code;
+        const compiledCustomer = Babel.transform(customerJsx, { presets: ['react', 'env'] }).code;
+        const compiledRestaurant = Babel.transform(restaurantJsx, { presets: ['react', 'env'] }).code;
+
+        // Isolate LandingPage scope
+        const landingExports = {};
+        const landingModule = { exports: landingExports };
+        const runLanding = new Function('React', 'exports', 'module', 'require', compiledLanding);
+        runLanding(window.React, landingExports, landingModule, window.require);
+        const LandingPage = landingModule.exports.default || landingExports.default;
+
+        // Isolate Register scope
+        const registerExports = {};
+        const registerModule = { exports: registerExports };
+        const runRegister = new Function('React', 'exports', 'module', 'require', compiledRegister);
+        runRegister(window.React, registerExports, registerModule, window.require);
+        const Register = registerModule.exports.default || registerExports.default;
+
+        // Isolate Login scope
+        const loginExports = {};
+        const loginModule = { exports: loginExports };
+        const runLogin = new Function('React', 'exports', 'module', 'require', compiledLogin);
+        runLogin(window.React, loginExports, loginModule, window.require);
+        const Login = loginModule.exports.default || loginExports.default;
+
+        // Isolate CustomerDashboard scope
+        const customerExports = {};
+        const customerModule = { exports: customerExports };
+        const runCustomer = new Function('React', 'exports', 'module', 'require', compiledCustomer);
+        runCustomer(window.React, customerExports, customerModule, window.require);
+        const CustomerDashboard = customerModule.exports.default || customerExports.default;
+
+        // Isolate RestaurantDashboard scope
+        const restaurantExports = {};
+        const restaurantModule = { exports: restaurantExports };
+        const runRestaurant = new Function('React', 'exports', 'module', 'require', compiledRestaurant);
+        runRestaurant(window.React, restaurantExports, restaurantModule, window.require);
+        const RestaurantDashboard = restaurantModule.exports.default || restaurantExports.default;
+
+        if (!LandingPage) throw new Error("No default export found in LandingPage.jsx");
+        if (!Register) throw new Error("No default export found in Register.jsx");
+        if (!Login) throw new Error("No default export found in Login.jsx");
+        if (!CustomerDashboard) throw new Error("No default export found in CustomerDashboard.jsx");
+        if (!RestaurantDashboard) throw new Error("No default export found in RestaurantDashboard.jsx");
+
+        // Simple State Router Component
+        function MainApp() {
+          const [view, setView] = React.useState('landing'); // landing, register, login, customer-dashboard, restaurant-dashboard
+
+          const handleNavigate = (targetView) => {
+            setView(targetView);
+          };
+
+          if (view === 'register') {
+            return React.createElement(Register, { onNavigate: handleNavigate });
+          }
+
+          if (view === 'login') {
+            return React.createElement(Login, { onNavigate: handleNavigate });
+          }
+
+          if (view === 'customer-dashboard') {
+            return React.createElement(CustomerDashboard, { onNavigate: handleNavigate });
+          }
+
+          if (view === 'restaurant-dashboard') {
+            return React.createElement(RestaurantDashboard, { onNavigate: handleNavigate });
+          }
+
+          return React.createElement(LandingPage, { 
+            onNavigate: handleNavigate 
+          });
+        }
+        
+        // Mount Application Router
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(React.createElement(MainApp));
+        
+      } catch (error) {
+        console.error("BiteSwift initialization failed:", error);
+        
+        // Display user-friendly diagnostic message
+        document.getElementById('root').innerHTML = `
+          <div class="min-h-screen flex items-center justify-center p-6 bg-slate-50">
+            <div class="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl border border-slate-100 text-center animate-scaleUp">
+              <div class="h-16 w-16 rounded-full bg-rose-100 flex items-center justify-center mx-auto mb-6 text-rose-600 text-3xl">
+                ⚠️
+              </div>
+              <h2 class="text-2xl font-black text-slate-900 mb-3">Launch Blocked by CORS</h2>
+              <p class="text-slate-500 text-sm leading-relaxed mb-6">
+                Modern browsers restrict files loaded via <b>file://</b> URLs from fetching local subfiles (like LandingPage.jsx) due to security policies.
+              </p>
+              
+              <div class="bg-slate-50 rounded-2xl p-4 text-left mb-6 text-xs text-slate-600 font-mono select-all">
+                # Start Python server to preview:<br/>
+                python -m http.server 8000
+              </div>
+              
+              <div class="text-xs text-slate-400 font-medium">
+                Please run a local web server in this directory to bypass CORS and load the interactive landing page.
+              </div>
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    // Initialize application when browser window has loaded
+    window.onload = initApp;
+  </script>
+</body>
+          </html>
